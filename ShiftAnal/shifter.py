@@ -21,9 +21,11 @@ class shifter:
         self.xmaxMC = []    # xmaxMC is the distribution that is shifted
 
     def ecdf(self, v, x):
-        """Given a vector v, return the ECDF evaluated at x."""
+        """Given a vector v, return the ECDF evaluated at x and the ECDF vector."""
+        F_x = []
+
         if len(v) == 0:
-            return 0.
+            return 0., np.array(F_x)
 
         fx = []
         n = 0
@@ -32,14 +34,14 @@ class shifter:
             n += 1
             fx.append(n)
         if n == 0:
-            return 0.
+            return 0., F_x
         F_x = np.array(fx)/float(n)
 
         i = np.searchsorted(vsorted, x, side = 'right') - 1
         if i < 0:
-            return 0.
+            return 0., F_x
         else:
-            return F_x[i]
+            return F_x[i], F_x
 
     def shift(self, step = 0.):
         """Shift the MC distribution by STEP g/cm^2 and return the CVM test
