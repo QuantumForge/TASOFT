@@ -23,7 +23,7 @@ class shifter:
     def ecdf(self, v, x):
         """Given a vector v, return the ECDF evaluated at x."""
         if len(v) == 0:
-            return
+            return 0.
 
         fx = []
         n = 0
@@ -31,10 +31,11 @@ class shifter:
         for s in vsorted:
             n += 1
             fx.append(n)
+        if n == 0:
+            return 0.
         F_x = np.array(fx)/float(n)
 
         i = np.searchsorted(vsorted, x, side = 'right') - 1
-        #print vsorted, F_x
         if i < 0:
             return 0.
         else:
