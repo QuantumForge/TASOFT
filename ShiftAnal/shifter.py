@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__  = "William Hanlon"
+__email__   = "whanlon@cosmic.utah.edu"
+__version__ = "1.0.0"
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
