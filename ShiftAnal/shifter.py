@@ -120,10 +120,10 @@ class shifter:
 
 
         # p-value for this test statistic
-        if T > self.z[-1]:
+        if limitT > self.z[-1]:
             p = 0.
         else:
-            p = 1. - self.f(T)
+            p = 1. - self.f(limitT)
 
         return T, limitT, p
 
