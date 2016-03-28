@@ -1,0 +1,520 @@
+#!/usr/bin/python
+"""Calculate dark and run times for Telescope Array fluorescence detectors."""
+
+__author__  = "William Hanlon"
+__email__   = "whanlon@cosmic.utah.edu"
+__version__ = "1.0.0."
+
+import datetime
+import getopt
+import ephem
+import os
+import sys
+
+class astroEvent:
+    def __init__(self):
+        self.title = None
+        self.dt    = None
+        self.eventFlag = None
+
+    def __str__(self):
+        return ("(title: %s, dt: %s, eventFlag: %s)" %
+                (str(self.title), str(self.dt), str(self.eventFlag)))
+        #retstr = ""
+        #for k, v in self.__dict__.iteritems():
+        #    retstr += ("%s: %s, " % (k, str(v)))
+        #return retstr
+
+    def __repr__(self):
+        return self.__str__()
+
+class runPeriod:
+    def __init__(self):
+        self.start = None
+        self.stop = None
+        self.period = None
+
+class dark:
+    def __init__(self):
+        # init FD locations here.
+        self.optVerbose = 0
+    
+        self.pname = os.path.basename(sys.argv[0])
+
+        self.site = {}
+        # define the sites
+        self.site["br"] = ephem.Observer()
+        self.site["br"].name      = "Black Rock Mesa FD"
+        self.site["br"].lat       = "39.18830"
+        self.site["br"].long      = "-112.71170"
+        self.site["br"].elevation = 1404.
+        self.site["br"].horizon = 0.
+
+        self.site["lr"] = ephem.Observer()
+        self.site["lr"].name      = "Long Ridge FD"
+        self.site["lr"].lat       = "39.20792"
+        self.site["lr"].long      = "-113.12147"
+        self.site["lr"].elevation = 1554.
+        self.site["lr"].horizon = 0.
+
+        self.site["md"] = ephem.Observer()
+        self.site["md"].name      = "Middle Drum FD"
+        self.site["md"].lat       = "39.47282"
+        self.site["md"].long      = "-112.99366"
+        self.site["md"].elevation = 1600.
+        self.site["md"].horizon = 0.
+
+        self.startDate = None
+        self.stopDate = None
+
+        self.minDarkTime = 2.75       # hours
+
+        # list of strings with run time info for each day.
+        self.darkPeriod = []
+    
+        # indicates if checking multiple dates. if so report the date as well as
+        # the time when showing runtimes.
+        self.checkMulti = False
+
+    def _findDarkPeriod(self, date, allowVerb = True):
+        """ Find dark period for given date. if allowVerb is True, allow verbose
+        output. Set allowVerb to False when checking if a date is a run date for
+        example and don't want to clutter the user screen with excess
+        garbage. Return True if date is a run date, otherwise return False."""
+        if (allowVerb and self.optVerbose):
+            print "date: ", date.date()
+        self.site[self.optSite].date = date
+
+        # dictionary of setting/rising events
+        event = {}
+
+        a = astroEvent()
+        a.title = "Previous moon set"
+        a.dt = self.site[self.optSite].previous_setting(ephem.Moon())
+        event["moonSetPrev"] = a
+
+        a = astroEvent()
+        a.title = "Previous moon rise"
+        a.dt = self.site[self.optSite].previous_rising(ephem.Moon())
+        event["moonRisePrev"] = a
+
+        a = astroEvent()
+        a.title = "Next moon set"
+        a.dt = self.site[self.optSite].next_setting(ephem.Moon())
+        event["moonSetNext"] = a
+
+        a = astroEvent()
+        a.title = "Next moon rise"
+        a.dt = self.site[self.optSite].next_rising(ephem.Moon())
+        event["moonRiseNext"] = a
+
+        # set for astro twilight calculation
+        a = astroEvent()
+        a.title = "Previous Sun rise"
+        a.dt = self.site[self.optSite].previous_rising(ephem.Sun())
+        event["sunRisePrev"] = a
+
+        a = astroEvent()
+        a.title = "Previous Sun set"
+        a.dt = self.site[self.optSite].previous_setting(ephem.Sun())
+        event["sunSetPrev"] = a
+
+        a = astroEvent()
+        a.title = "Next Sun set"
+        a.dt = self.site[self.optSite].next_setting(ephem.Sun())
+        event["sunSetNext"] = a
+        
+        a = astroEvent()
+        a.title = "Next Sun rise"
+        a.dt = self.site[self.optSite].next_rising(ephem.Sun())
+        event["sunRiseNext"] = a
+
+        # previous and next astro twilight
+        self.site[self.optSite].horizon = "-18."
+        a = astroEvent()
+        a.title = "Previous astro twilight begins"
+        a.dt = self.site[self.optSite].previous_rising(ephem.Sun(),
+                use_center = True)
+        event["astroTwilightBeginPrev"] = a
+
+        a = astroEvent()
+        a.title = "Previous astro twilight ends"
+        a.dt = self.site[self.optSite].previous_setting(ephem.Sun(),
+                use_center = True)
+        event["astroTwilightEndPrev"] = a
+
+        a = astroEvent()
+        a.title = "Next astro twilight ends"
+        a.dt = self.site[self.optSite].next_setting(ephem.Sun(),
+                use_center = True)
+        event["astroTwilightEndNext"] = a
+
+        a = astroEvent()
+        a.title = "Next astro twilight begins"
+        a.dt = self.site[self.optSite].next_rising(ephem.Sun(),
+                use_center = True)
+        event["astroTwilightBeginNext"] = a
+
+        # note that a side effect of setting use_center is to change the horizon
+        # member value. reset it here for multiple calls for varying dates.
+        self.site[self.optSite].horizon = 0.
+
+
+        # events to bracket the run period
+        ev1 = None
+        ev2 = None
+
+        # start states are undefined
+        # we only are interested in the twilight transitions
+        # 1) twilight begins, sun rise
+        # 2) sun set, twilight ends
+        #
+        # nowNight marks the period between twilight end and twilight begin
+        sunUp      = None
+        moonUp     = None
+        nowNight   = None
+        nowDark    = None 
+
+        for l in sorted(event.items(), key=lambda x: x[1].dt):
+            if (l[0].find("moonRise") >= 0):
+                moonUp = True
+            elif (l[0].find("moonSet") >= 0):
+                moonUp = False
+            elif (l[0].find("astroTwilightEnd") >= 0):
+                nowNight = True
+                # check the status of the moon if it's undefined
+                if (moonUp is None):
+                    moon = ephem.Moon()
+                    moon.compute(self.site[self.optSite])
+                    if (moon.alt > 0.):
+                        moonUp = True
+                    else:
+                        moonUp = False
+            elif (l[0].find("astroTwilightBegin") >= 0):
+                nowNight = False
+            elif (l[0].find("sunRise") >= 0):
+                sunUp = True
+            elif (l[0].find("sunSet") >= 0):
+                sunUp = False
+            else:
+                continue
+
+            if (sunUp or moonUp):
+                nowDark = False
+            if (not sunUp and not moonUp):
+                nowDark = True
+
+            #print "current event: ", l[0]
+            #print "   moonUp", moonUp, "sunUp", sunUp, "nowNight", \
+            #        nowNight, "nowDark", nowDark
+
+            if (nowNight is None or moonUp is None or sunUp is None):
+                continue
+
+            if (not ev1 and nowNight and nowDark):
+                nowDark = True
+                ev1 = l[1]
+                l[1].eventFlag = "+"
+            if (ev1 and (not nowDark or not nowNight)):
+                ev2 = l[1]
+                l[1].eventFlag = "+"
+                break
+
+
+        if (allowVerb and self.optVerbose):
+            for l in sorted(event.items(), key=lambda x: x[1].dt):
+                if (self.optLocalTime):
+                    ldt = ephem.localtime(l[1].dt)
+                    print("%30s  %s" %
+                            (l[1].title, ldt.strftime("%Y-%m-%d %T"))),
+                    # flag the events that demarcate dark time
+                    if (l[1].eventFlag is not None):
+                        print("  %s" % (l[1].eventFlag))
+                    else:
+                        print ""
+                else:
+                    print("%30s  %s" %
+                            (l[1].title,
+                                l[1].dt.datetime().strftime("%Y-%m-%d %T"))),
+                    # flag the events that demarcate dark time
+                    if (l[1].eventFlag is not None):
+                        print("  %s" % (l[1].eventFlag))
+                    else:
+                        print ""
+        darkTime = 0.
+        if (ev1 and ev2):
+            if (self.optLocalTime):
+                startTime = ephem.localtime(ev1.dt)
+                stopTime = ephem.localtime(ev2.dt)
+            else:
+                startTime = ev1.dt.datetime()
+                stopTime = ev2.dt.datetime()
+
+            # round times to the nearest second
+            discard = datetime.timedelta(microseconds = startTime.microsecond)
+            startTime -= discard
+            if (discard >= datetime.timedelta(microseconds = 500)):
+                    startTime += datetime.timedelta(seconds = 1)
+
+            discard = datetime.timedelta(microseconds = stopTime.microsecond)
+            stopTime -= discard
+            if (discard >= datetime.timedelta(microseconds = 500)):
+                    stopTime += datetime.timedelta(seconds= 1)
+
+            # taking the difference makes this a timedelta. convert to hours.
+            darkTime = (stopTime - startTime).total_seconds()/3600.
+           
+            darkMark = " "
+            if (darkTime > self.minDarkTime):
+                darkMark = "*"
+
+            # Long Ridge dark times are 1 hour shorter than other FDs, but
+            # this 1 hour difference does not influence whether it is a run
+            # night or not.
+            if (self.optSite == "lr"):
+                stopTime -= datetime.timedelta(hours = 1)
+                darkTime -= 1.
+                if (darkTime < 0.):
+                    darkTime = 0.
+
+            # if checking more than 1 day print out the date along with the run
+            # time information
+            if (self.checkMulti):
+                s = (("%s start: %s %02d:%02d:%02d   stop: %s %02d:%02d:%02d" +
+                    " (%5.2f)") %
+                    (darkMark, startTime.date(), startTime.time().hour,
+                        startTime.time().minute,
+                        startTime.time().second, stopTime.date(),
+                        stopTime.time().hour, stopTime.time().minute,
+                        stopTime.time().second,
+                        darkTime))
+            else:
+                s = (("%s start: %02d:%02d:%02d   stop: %02d:%02d:%02d" +
+                    " (%5.2f)") %
+                    (darkMark, startTime.time().hour,
+                        startTime.time().minute,
+                        startTime.time().second,
+                        stopTime.time().hour, stopTime.time().minute,
+                        stopTime.time().second,
+                        darkTime))
+
+
+            self.darkPeriod.append(s)
+
+            if (darkMark == "*"):
+                return True
+            return False
+
+    def usage(self):
+        print("usage: %s [OPTION]" % os.path.basename(sys.argv[0]))
+        print("  -d --date\tPrint dark times for a given date. Provide " +
+                "date in YYYY-MM-DD")
+        print("\t\tformat. Follow with another -d to specify a range.")
+        print("  -h --help\tPrint this message and exit.")
+        print("  -l --local\tShow all times for local time zone.")
+        print(("  -m --minDark\tSet minimum number of hours for a " +
+                "run night (Default: %5.2f)") % (self.minDarkTime))
+        print("  -r --run\tPrint out information for an entire FD run")
+        print("  -s --site\tPrint dark times for a given site. Acceptable " +
+                "sites are:")
+        print("\t\t"),
+        for k in sorted(self.site.keys()):
+            print("\"%s\"" % (k)),
+        print("")
+        print("  --br\tPrint dark times for Black Rock.")
+        print("  --lr\tPrint dark times for Long Ridge. (NOTE: dark times " +
+                "for Long Ridge are\n\t1 hour shorter than other FDs.)")
+        print("  --md\tPrint dark times for Middle Drum.")
+        print("  -v --verbose\tIncrease output verbosity level.")
+        print("")
+        print("Defined sites:")
+        for k in sorted(self.site.keys()):
+            print("%s   \t[%s %s]" % (self.site[k].name, self.site[k].lat,
+                self.site[k].long))
+
+
+    def main(self, argv = None):
+        errorFlag = False
+
+        if (argv is None):
+            argv = sys.argv
+
+        cOpts = []
+        cArgs = []
+
+        try:
+            cOpts, cArgs = getopt.gnu_getopt(argv[1:],
+                    "d:hlm:rs:v",
+                    ["br",
+                     "date=",
+                     "help",
+                     "local",
+                     "lr",
+                     "md",
+                     "minDark",
+                     "run",
+                     "site=",
+                     "verbose"])
+        except getopt.GetoptError, msg:
+            print >>sys.stderr, ("%s: %s" % (self.pname, msg))
+            errorFlag = True
+
+        optDate = None
+        self.optLocalTime = False
+        optRun = False
+        self.optSite = "md"
+        for (opt, arg) in cOpts:
+            if (opt == "--br"):
+                self.optSite = "br"
+            elif (opt in ("-d", "--date")):
+                try:
+                    optDate = datetime.datetime.strptime(arg, "%Y-%m-%d")
+                except ValueError:
+                    print >>sys.stderr, ("%s: Invalid date" % self.pname)
+                    return 1
+                optDate = datetime.datetime.combine(optDate,
+                        datetime.time(23, 59, 0))
+                if (self.startDate is None):
+                    self.startDate = optDate
+                elif (self.stopDate is None):
+                    self.stopDate = optDate
+                    self.checkMulti = True
+                else:
+                    print >>sys.stderr, ("%s: Invalid range" % self.pname)
+                    errorFlag = True
+            elif (opt in ("-h", "--help")):
+                self.usage()
+                return 0
+            elif (opt in ("-l", "--local")):
+                self.optLocalTime = True
+            elif (opt == "--lr"):
+                self.optSite = "lr"
+            elif (opt == "--md"):
+                self.optSite = "md"
+            elif (opt in ("-m", "--minDark")):
+                try:
+                    mdt = float(arg)
+                except ValueError:
+                    print >>sys.stderr, ("%s: Invalid minimum dark time (%s)" %
+                            (self.pname, arg))
+                    errorFlag = True
+                    break
+                if (mdt < 0. or mdt > 24.):
+                    print >>sys.stderr,\
+                            ("%s: Invalid minimum dark time (%s)" %
+                                    (self.pname, arg))
+                    errorFlag = True
+                self.minDarkTime = mdt
+            elif (opt in ("-r", "--run")):
+                optRun = True
+                self.checkMulti = True
+            elif (opt in ("-s", "--site")):
+                self.optSite = arg
+                if (self.optSite not in self.site.keys()):
+                    errorFlag = True
+                    print >>sys.stderr, ("%s: Invalid site (%s)" %
+                            (self.pname, self.optSite))
+            elif (opt in ("-v", "--verbose")):
+                self.optVerbose += 1
+
+
+        if (errorFlag):
+            self.usage()
+            return 1
+        
+        # if user didn't specify a date or date range use today's date
+        if (self.startDate is None):
+            dtUTCNow = datetime.datetime.utcnow()
+            dtUTCDate = dtUTCNow.date()
+            # set the time to 23:59 UTC
+            dtUTCTime = datetime.time(23, 59, 0)
+
+            dtNow = datetime.datetime.combine(dtUTCDate, dtUTCTime)
+
+            #self.site[self.optSite].date = dtNow
+            self.startDate = dtNow
+
+        # if date range is provided ignore --run option
+        if (self.stopDate):
+            optRun = False
+
+        if (optRun):
+            # is this a run date?
+            r = self._findDarkPeriod(self.startDate, False)
+            beginDate = None
+           
+            if (r):
+                checkDate = self.startDate
+                # work backward and find the first night of the run
+                while (True):
+                    checkDate = checkDate - datetime.timedelta(days = 1)
+                    r = self._findDarkPeriod(checkDate, False)
+                    if (not r):
+                        break
+                beginDate = checkDate + datetime.timedelta(days = 1)
+
+            else:
+                # search for start of the preceding run
+                prevRunStart = self.startDate
+                foundRun = False
+                while (True):
+                    prevRunStart = prevRunStart - datetime.timedelta(days = 1)
+                    r = self._findDarkPeriod(prevRunStart, False)
+                    if (r):
+                        foundRun = True
+                    if (foundRun and not r):
+                        break
+                prevRunStart = prevRunStart + datetime.timedelta(days = 1)
+
+                # search for start of the next run
+                nextRunStart = self.startDate
+                foundRun = False
+                while (True):
+                    nextRunStart = nextRunStart + datetime.timedelta(days = 1)
+                    r = self._findDarkPeriod(nextRunStart, False)
+                    if (r):
+                        foundRun = True
+                        break
+
+                if (self.startDate - prevRunStart < nextRunStart -
+                        self.startDate):
+                    beginDate = prevRunStart
+                else:
+                    beginDate = nextRunStart
+
+            # reset the list of dark periods
+            self.darkPeriod = []
+
+            # now print info for dates from beginDate until the first non-run
+            # date.
+            checkDate = beginDate
+            while (True):
+                r = self._findDarkPeriod(checkDate)
+                if (not r):
+                    # remove the last entry
+                    if (len(self.darkPeriod)):
+                        self.darkPeriod.pop()
+                    break
+                checkDate = checkDate + datetime.timedelta(days = 1)
+
+        else:
+            date = self.startDate
+            if (self.stopDate is None):
+                self.stopDate = self.startDate
+            while (True):
+                self._findDarkPeriod(date)
+                date = date + datetime.timedelta(days = 1)
+                td = self.stopDate - date
+                if (td.days <= 0.):
+                    break
+
+        if (len(self.darkPeriod)):
+            for dp in self.darkPeriod:
+                print dp
+            #if (self.checkMulti):
+            #    print("%d run days" % len(self.darkPeriod))
+
+        return 0
+
+if (__name__ == "__main__"):
+    sys.exit(dark().main())
