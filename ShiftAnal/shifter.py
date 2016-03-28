@@ -22,6 +22,9 @@ class shifter:
         self.xmaxMC = []    # xmaxMC is the distribution that is shifted
 
         # table of test statistics and lim_{n->\infinity} P(n\omega^2 <= z)
+        # table extracted from "Asymptotic Theory of Certain 'Goodness of Fit'
+        # Criteria Based on Stochastic Processes", Anderson and Darling, p. 203
+        # (https://projecteuclid.org/download/pdf_1/euclid.aoms/1177729437)
         self.a1_z = np.linspace(0., 0.99, 100)
         self.a1_z = np.append(self.a1_z, 0.999)
         self.z = [0.00000, 0.02480, 0.02878, 0.03177, 0.03430, 0.03656, 0.03865,
