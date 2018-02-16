@@ -38,8 +38,7 @@ class ta_auth:
 		return sorted(inst_num)
 
     def read(self, file_name):
-        """Reads in the CSV file created from the master spreadsheet at
-        https://docs.google.com/spreadsheets/d/1nSKPPf1FDI00I1Y53cVibeOSw3gTBJS4Ojs3CL357-g/edit?usp=sharing.
+        """Reads in the CSV file created from the master spreadsheet.
         Import the file using "File..., Download As.., .csv", then provide the
         csv file as file_name to this method.
 
