@@ -3,17 +3,22 @@
 
 __author__  = "William Hanlon"
 __email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from operator import itemgetter
+import sys
 from ta_auth import ta_auth
 
 class arxiv(ta_auth):
-    def dump(self):
+    def dump(self, fileName = None):
         """Prints the TA author list in simple format for use on arXiv.org
         author lists."""
 
         inst_dict = self.sort_and_number_institutions()
+
+        if fileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(fileName, 'w')
 
         authnum = 1
         line = 'Telescope Array Collaboration: '
@@ -46,3 +51,8 @@ class arxiv(ta_auth):
         line += ')'
 
         print line
+
+
+        if fileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout

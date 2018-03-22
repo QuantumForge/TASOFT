@@ -12,16 +12,23 @@ and produces the author list output formatted for AASTeX publications."""
 
 __author__  = "William Hanlon"
 __email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 import re
+import sys
 from ta_auth import ta_auth
 
 class aastex(ta_auth):
 
-    def dump(self):
+    def dump(self, fileName = None):
         """Prints the author list for use with the aastex62 package."""
-        for _, surname, initials, orcid, institution, status in self.author_data:
+
+        if fileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(fileName, 'w')
+
+        for _, surname, initials, orcid, institution, status in \
+                self.author_data:
             line = '\\author'
             if orcid != '':
                 line += '[' + orcid + ']'
@@ -39,3 +46,7 @@ class aastex(ta_auth):
                 print line
 
             print ''
+
+        if fileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout

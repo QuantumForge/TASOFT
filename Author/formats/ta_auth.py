@@ -3,22 +3,32 @@
 
 __author__  = "William Hanlon"
 __email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 import csv
 import re
+import sys
 
 class ta_auth:
     """Base class for TA author data formatting classes."""
     def __init__(self):
         self.author_data = []
 
-    def dump(self):
+    def dump(self, fileName = None):
         """Prints the unordered list in simple block format. Use one of the
         derived classes to print a sorted formated list."""
+
+        if fileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(fileName, 'w')
+
         for sort_key, surname, initials, orcid, institution, status in self.author_data:
             name = initials + ' ' + surname
             print name, '\t', orcid, '\t', institution, '\t', status
+
+        if fileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout
 
     def get_author_institution_numbers(self, institution, inst_dict):
 		"""Given the string of institutions (each enclosed in {}), lookup the
