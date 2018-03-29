@@ -22,8 +22,10 @@ https://developers.google.com/sheets/api/quickstart/python for an example on
 how to do this."""
 
 import argparse
+import io
 import os
 import sys
+import tempfile
 
 from formats import ta_auth
 from formats import aastex
@@ -43,6 +45,7 @@ else:
 
 try:
     from apiclient import discovery
+    from apiclient.http import MediaIoBaseDownload
 except ImportError:
     moduleLoaded['apiclient'] = False
 else:
@@ -57,31 +60,103 @@ except ImportError:
 else:
     moduleLoaded['oauth2client'] = True
 
+SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly'
+CLIENT_SECRET_FILE = 'client_secret_taauth.json'
+APPLICATION_NAME = 'TA_AUTHOR_LIST'
+
+def get_credentials(flags):
+    """Gets valid credentials from storage.
+
+    If nothing has been stored, or if the stored credentials are invalid,
+    the OAuth2 flow is completed to obtain the new credentials.
+
+    Returns:
+      Credentials, the obtained credential.
+    """
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, '.credentials')
+    if not os.path.exists(credential_dir):
+        os.makedirs(credential_dir)
+    credential_path = os.path.join(credential_dir,
+            'drive-python-taauthor.json')
+    
+    store = Storage(credential_path)
+    credentials = store.get()
+    if not credentials or credentials.invalid:
+        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
+        flow.user_agent = APPLICATION_NAME
+        if flags:
+            credentials = tools.run_flow(flow, store, flags)
+        else: # Needed only for compatibility with Python 2.6
+            credentials = tools.run(flow, store)
+        print('Storing credentials to ' + credential_path)
+    return credentials
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('files', nargs = 1,
-            help = 'pass the unsorted TA Author list file name')
-    parser.add_argument('--format', choices=['plain', 'plainLatex', 'authblk',
-        'aastex', 'arxiv'], default='plainLatex',
+    # now if 'file' is empty assume the user wants to read the spreadsheet
+    # directly from the cloud
+    parser = argparse.ArgumentParser(parents=[tools.argparser],
+            description='Sort the TA Author list in alphabetical order and '
+            'affiliations in numerical order.\nIf file is not provided, '
+            'attempt to read the master authorlist spreadsheet from the '
+            'cloud.\n(Spreadsheet ID must be provided in a file named '
+            '\'ta_author_list.txt\'.)')
+    parser.add_argument('file', nargs = '?',
+            help = 'TA Author list file name in CSV format')
+    parser.add_argument('--format', choices=['plainLatex', 'plainText',
+        'authblk', 'aastex', 'arxiv'], default='plainLatex',
         help='select the output format')
     parser.add_argument('--output', help='select the file to write to')
-
-    if len(sys.argv) == 1:
-        sys.stdout.write("\n");
-        sys.stdout.write("Sort the TA Author list in alphabetical order and affiliations in numerical order\n");
-        sys.stdout.write("Up to 4 affiliations per author can be parsed.  If needed more affiliations then edit the script.\n");
-        sys.stdout.write("Author: D. Ivanov <dmiivanov@gmail.com>\n\n");
-        parser.print_help()
-        sys.stdout.write("\n\n")
-        sys.exit(1)
+    parser.add_argument('--savecsv', action='store_true', default=False,
+        help='save downloaded csv to ta_author.csv when reading from the cloud')
 
     args = parser.parse_args()
 
-    if not os.access(args.files[0], os.R_OK):
-        sys.stderr.write('%s: Can\'t read %s\n' %
-                (os.path.basename(sys.argv[0]), args.files[0]))
-        sys.exit(1)
+    if args.file is None:
+        
+        if (moduleLoaded['httplib2'] == False or
+            moduleLoaded['apiclient'] == False or
+            moduleLoaded['oauth2client'] == False):
+            modMissing = ''
+            for k, v in moduleLoaded.iteritems():
+                if v == False:
+                    modMissing += k + ' '
+
+            sys.stderr.write('%s: Trying to read from the cloud, the following '
+                'modules failed to load: %s\n' % (args.file, modMissing))
+            sys.exit(1)
+
+        credentials = get_credentials(args)
+        http = credentials.authorize(httplib2.Http())
+        service = discovery.build('drive', 'v3', http=http)
+        with open('ta_author_list.txt', 'r') as f:
+            spreadsheetId = f.readline().strip()
+
+        request = service.files().export_media(fileId=spreadsheetId,
+                mimeType='text/csv')
+
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            #print "Download %d%%." % int(status.progress() * 100)
+
+
+        if args.savecsv:
+            csvfileName = 'ta_author.csv'
+            csvfile = open(csvfileName, 'wb')
+        else:
+            csvfile = tempfile.NamedTemporaryFile(delete=False);
+            csvfileName = csvfile.name
+        with csvfile as f:
+            f.write(fh.getvalue())
+        fh.close()
+
+    if args.file is None:
+        inputCsvFile = csvfileName
+    else:
+        inputCsvFile = args.file
 
     if args.format == 'plainLatex':
         author_list = plain_latex.plain_latex()
@@ -94,8 +169,11 @@ def main():
     else:
         author_list = ta_auth.ta_auth()
 
-    author_list.read(args.files[0])
+    author_list.read(inputCsvFile)
     author_list.dump(args.output)
+
+    if args.file is None and args.savecsv == False:
+        os.unlink(csvfileName)
 
 if __name__ == '__main__':
     main()
