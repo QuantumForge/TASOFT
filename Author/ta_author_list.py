@@ -15,11 +15,11 @@ columns of the file are expected to be:
 Multiple output formats are intended to be supported to alleviate the chance of
 making mistakes when transcribing the author list to multiple TeX formats.
 
-If attempting read the spreedsheet directly in the cloud using the google api,
-the first attempt will require human intervention to grab credentials that
+If attempting to read the spreedsheet directly in the cloud using the google
+api, the first attempt will require human intervention to grab credentials that
 authorize you to read the sheet. See
-https://developers.google.com/sheets/api/quickstart/python for an example on
-how to do this."""
+https://developers.google.com/sheets/api/quickstart/python for an example on how
+to do this."""
 
 import argparse
 import io
