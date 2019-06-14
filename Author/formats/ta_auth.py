@@ -32,7 +32,7 @@ class ta_auth:
 
     def get_author_institution_numbers(self, institution, inst_dict):
 		"""Given the string of institutions (each enclosed in {}), lookup the
-		corresponding instituion number from the dictionary of unique
+		corresponding institution number from the dictionary of unique
 		institution entries. Returns a sorted list of those institution
 		numbers."""
 
