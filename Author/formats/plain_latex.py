@@ -32,7 +32,16 @@ class plain_latex(ta_auth):
             origStdout = sys.stdout
             sys.stdout = open(fileName, 'w')
 
+        print '\\makeatletter'
+        print '\\newcommand{\\ssymbol[1]{^{\\@fnsymbol{#1}}}'
+        print '\\makeatother'
         print '\\par\\noindent'
+
+        # keep track of authors that have the status field filled. each
+        # time we encounter a non-empty status field, we increment nstatus
+        # and include a footnote with a different footnote symbol
+        nstatus = 0
+        status_data = []
 
         linenum = 1
         for _, surname, initials, _, institution, status in self.author_data:
@@ -45,7 +54,8 @@ class plain_latex(ta_auth):
             line = line + initials + "~" + surname + '$^{'
 
             # get a sorted list of institution numbers for this author
-            inst_num = self.get_author_institution_numbers(institution, inst_dict)
+            inst_num = self.get_author_institution_numbers(institution,
+                    inst_dict)
 
             i = 0
             # institution numbers are sorted
@@ -54,14 +64,12 @@ class plain_latex(ta_auth):
                     line += ','
                 line += str(j)
                 i += 1
-            # at the moment status only applies to one person and that status is
-            # "deceased". and only a "*" is assigned in the author list. if 
-            # more statuses are needed, then this bit of code needs to change
-            # and the status symbol will have to be selected as well on a
-            # case-by-case basis or added as an additional field in the
-            # author_data source
+
             if status != '':
-                line += '*'
+                nstatus += 1
+                #line += '*'
+                line += '\\ssymbol{{{0}}}'.format(nstatus)
+                status_data.append(status)
             line += '}$'
             if linenum != len(self.author_data):
                 line += ','
@@ -76,7 +84,8 @@ class plain_latex(ta_auth):
             print line
 
         print ''
-        print '\\let\\thefootnote\\relax\\footnote{$^{*}$ Deceased}'
+        for i in range(len(status_data)):
+            print '\\let\\thefootnote\\relax\\footnote{{$\\ssymbol{{{0}}}$ {1}}}'.format(i + 1, status_data[i])
         print '\\addtocounter{footnote}{-1}\\let\\thefootnote\\svthefootnote'
         print '}'
         print '\\par\\noindent'
