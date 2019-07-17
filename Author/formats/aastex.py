@@ -10,22 +10,41 @@ values
 6) status
 and produces the author list output formatted for AASTeX publications."""
 
-__author__  = "William Hanlon"
-__email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.1.0"
-
 import re
 import sys
+
 from ta_auth import ta_auth
 
-class aastex(ta_auth):
+__author__    = 'William Hanlon'
+__copyright__ = ''
+__credits__   = ''
+__license__   = ''
+__version__   = '1.1.0'
+__maintainer  = 'William Hanlon'
+__email__     = 'whanlon@cosmic.utah.edu'
+__status__    = 'Production'
 
-    def dump(self, fileName = None):
+class aastex(ta_auth):
+    def dumpPreamble(self):
+        if self.outFileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(self.outFileName, 'w')
+
+        print("""\\documentclass{aastex62}
+\\begin{document}
+\\title{Telescope Array Collaboration}
+\\date{}
+""")
+        if self.outFileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout
+
+    def dumpAuthor(self):
         """Prints the author list for use with the aastex62 package."""
 
-        if fileName is not None:
+        if self.outFileName is not None:
             origStdout = sys.stdout
-            sys.stdout = open(fileName, 'w')
+            sys.stdout = open(self.outFileName, 'a')
 
         for _, surname, initials, orcid, institution, status in \
                 self.author_data:
@@ -47,6 +66,6 @@ class aastex(ta_auth):
 
             print ''
 
-        if fileName is not None:
+        if self.outFileName is not None:
             sys.stdout.close()
             sys.stdout = origStdout

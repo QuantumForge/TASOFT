@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__  = "William Hanlon"
-__email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.1.0"
+__author__    = 'William Hanlon'
+__copyright__ = ''
+__credits__   = ''
+__license__   = ''
+__version__   = '2.0.0'
+__maintainer  = 'William Hanlon'
+__email__     = 'whanlon@cosmic.utah.edu'
+__status__    = 'Production'
 
 import csv
 import re
@@ -11,22 +16,54 @@ import sys
 
 class ta_auth:
     """Base class for TA author data formatting classes."""
-    def __init__(self):
+    def __init__(self, authInFileName, ackInFileName,
+            outFileName = None):
         self.author_data = []
+        self.outFileName = outFileName
+        self.authInFileName = authInFileName
+        self.ackInFileName = ackInFileName
 
-    def dump(self, fileName = None):
+    def dumpPreamble(self):
+        pass
+
+    def dumpAcknowledge(self):
+        if self.outFileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(self.outFileName, 'a')
+
+        with(open(self.ackInFileName, 'rb')) as fin:
+            for line in fin:
+                print line.strip()
+
+        if self.outFileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout
+
+    def dumpFoot(self):
+        if self.outFileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(self.outFileName, 'a')
+
+        print("\\end{document}")
+
+        if self.outFileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout
+
+    def dumpAuthor(self):
         """Prints the unordered list in simple block format. Use one of the
         derived classes to print a sorted formated list."""
 
-        if fileName is not None:
+        if self.outFileName is not None:
             origStdout = sys.stdout
-            sys.stdout = open(fileName, 'w')
+            sys.stdout = open(self.outFileName, 'w')
 
-        for sort_key, surname, initials, orcid, institution, status in self.author_data:
+        for sort_key, surname, initials, orcid, institution, status in \
+                self.author_data:
             name = initials + ' ' + surname
             print name, '\t', orcid, '\t', institution, '\t', status
 
-        if fileName is not None:
+        if self.outFileName is not None:
             sys.stdout.close()
             sys.stdout = origStdout
 
@@ -47,10 +84,10 @@ class ta_auth:
 
 		return sorted(inst_num)
 
-    def read(self, file_name):
+    def readAuthor(self):
         """Reads in the CSV file created from the master spreadsheet.
         Import the file using "File..., Download As.., .csv", then provide the
-        csv file as file_name to this method.
+        csv file as authInFileName to this method.
 
         The first row is the file header. Columns are ordered as
         1) Surname
@@ -60,8 +97,8 @@ class ta_auth:
         5) Institution Code
         6) Institution
         7) Status (e.g., deceased)"""
-        with open(file_name, 'rb') as csvfile:
-            reader = csv.reader(csvfile)
+        with open(self.authInFileName, 'rb') as authInFileName:
+            reader = csv.reader(authInFileName)
             # the first line is a header (it should be)
             reader.next() # skip the first line
             for row in reader:

@@ -1,16 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__  = "William Hanlon"
-__email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.1.0"
-
 from operator import itemgetter
 import sys
+
 from ta_auth import ta_auth
 
+__author__    = 'William Hanlon'
+__copyright__ = ''
+__credits__   = ''
+__license__   = ''
+__version__   = '1.1.0'
+__maintainer  = 'William Hanlon'
+__email__     = 'whanlon@cosmic.utah.edu'
+__status__    = 'Production'
+
+
+
 class arxiv(ta_auth):
-    def dump(self, fileName = None):
+    def dumpAuthor(self, fileName = None):
         """Prints the TA author list in simple format for use on arXiv.org
         author lists."""
 

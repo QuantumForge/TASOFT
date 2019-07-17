@@ -10,32 +10,58 @@ values
 6) status
 and produces the author list output formatted for plain LaTeX."""
 
-__author__  = "William Hanlon"
-__email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.1.0"
-
 from operator import itemgetter
 import re
 import sys
+
 from ta_auth import ta_auth
+
+__author__    = 'William Hanlon'
+__copyright__ = ''
+__credits__   = 'Dmitri Ivanonv'
+__license__   = ''
+__version__   = '2.0.0'
+__maintainer  = 'William Hanlon'
+__email__     = 'whanlon@cosmic.utah.edu'
+__status__    = 'Production'
 
 class plain_latex(ta_auth):
     """Prints the author list in generic LaTeX format. No additional packages
     are required to use this format in a LaTeX document."""
 
-    def dump(self, fileName = None):
+    def dumpPreamble(self):
+        if self.outFileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(self.outFileName, 'w')
+
+        print("""\\documentclass[10pt]{article}
+\\usepackage[margin=1in]{geometry}
+
+\\title{Telescope Array Collaboration}
+\\date{}
+
+\\begin{document}
+
+\\maketitle
+""")
+
+        if self.outFileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout
+
+    def dumpAuthor(self):
     # generate a unique list of insitutions and their numbering as they
     #should appear in the author list
         inst_dict = self.sort_and_number_institutions()
 
-        if fileName is not None:
+        if self.outFileName is not None:
             origStdout = sys.stdout
-            sys.stdout = open(fileName, 'w')
+            sys.stdout = open(self.outFileName, 'a')
 
-        print '\\makeatletter'
-        print '\\newcommand{\\ssymbol[1]{^{\\@fnsymbol{#1}}}'
-        print '\\makeatother'
-        print '\\par\\noindent'
+        print("""\\makeatletter
+\\newcommand{\\ssymbol}[1]{^{\\@fnsymbol{#1}}}
+\\makeatother
+\\par\\noindent""")
 
         # keep track of authors that have the status field filled. each
         # time we encounter a non-empty status field, we increment nstatus
@@ -76,6 +102,7 @@ class plain_latex(ta_auth):
             print line
             linenum += 1
 
+        print '\\bigskip'
         print '\\par\\noindent'
         print '{\\footnotesize\\it'
 
@@ -90,6 +117,6 @@ class plain_latex(ta_auth):
         print '}'
         print '\\par\\noindent'
 
-        if fileName is not None:
+        if self.outFileName is not None:
             sys.stdout.close()
             sys.stdout = origStdout

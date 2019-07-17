@@ -10,30 +10,59 @@ values
 6) status
 and produces the author list output formatted for plain LaTeX."""
 
-__author__  = "William Hanlon"
-__email__   = "whanlon@cosmic.utah.edu"
-__version__ = "1.1.0"
-
 from operator import itemgetter
 import re
 import sys
+
 from ta_auth import ta_auth
+
+__author__    = 'William Hanlon'
+__copyright__ = ''
+__credits__   = ''
+__license__   = ''
+__version__   = '2.0.0'
+__maintainer  = 'William Hanlon'
+__email__     = 'whanlon@cosmic.utah.edu'
+__status__    = 'Production'
+
 
 class authblk(ta_auth):
     """Prints the author list in for use with the authblk package."""
-    
-    def dump(self, fileName = None):
+
+    def dumpPreamble(self):
+        if self.outFileName is not None:
+            origStdout = sys.stdout
+            sys.stdout = open(self.outFileName, 'w')
+
+        print("""\\documentclass[10pt]{article}
+\\usepackage[affil-it]{authblk}
+\\usepackage[margin=1in]{geometry}
+\\renewcommand\\Affilfont{\\itshape\\footnotesize}
+
+\\title{Telescope Array Collaboration}
+
+\\date{}
+
+\\begin{document}
+
+""")
+
+        if self.outFileName is not None:
+            sys.stdout.close()
+            sys.stdout = origStdout
+
+    def dumpAuthor(self):
         # generate a unique list of insitutions and their numbering as they
         # should appear in the author list
         inst_dict = self.sort_and_number_institutions()
 
-        if fileName is not None:
+        if self.outFileName is not None:
             origStdout = sys.stdout
-            sys.stdout = open(fileName, 'w')
+            sys.stdout = open(self.outFileName, 'a')
 
         # give a hint as to what package to use and options we are using
-        print '\\usepackage[affil-it]{authblk}'
-        print '\\renewcommand\\Affilfont{\\itshape\\footnotesize}'
+        #print '\\usepackage[affil-it]{authblk}'
+        #print '\\renewcommand\\Affilfont{\\itshape\\footnotesize}'
 
         for _, surname, initials, _, institution, status in self.author_data:
             line = '\\author['
@@ -57,7 +86,10 @@ class authblk(ta_auth):
             line = '\\affil[' + str(value) + ']{' + key + '}'
             print line
 
-        if fileName is not None:
+        print('\\maketitle')
+        print('')
+
+        if self.outFileName is not None:
             sys.stdout.close()
             sys.stdout = origStdout
 
