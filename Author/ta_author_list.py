@@ -199,7 +199,7 @@ def main():
         help='select the output format')
     parser.add_argument('--output', help='select the file to write to')
     parser.add_argument('--pdf', help='generate a PDF version of the '
-            'authorlist from the authblk template')
+            'authorlist from the authblk template. NOT YET IMPLEMENTED.')
     parser.add_argument('--savecsv', action='store_true', default=False,
         help='save downloaded csv to ta_author.csv when reading from the cloud')
     parser.add_argument('--saveack', action='store_true', default=False,
@@ -258,7 +258,6 @@ def main():
     else:
         author_list = ta_auth.ta_auth(inputCsvFile, inputAckFile, args.output)
 
-    #author_list.read()
     # readAuthor reads in the author CSV file and processes it quite a bit
     # to alphabetize and number institutions in order as they appear in the
     # author list.
@@ -266,7 +265,6 @@ def main():
     # there is no readAcknowledgements because we'll just dump the simple
     # contents of the file pointed to by inputAckFile to args.output
 
-    #author_list.dump()
     author_list.dumpPreamble()
     author_list.dumpAuthor()
     author_list.dumpAcknowledge()
