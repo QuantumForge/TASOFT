@@ -46,6 +46,9 @@ from formats import plain_latex
 from formats import authblk
 from formats import arxiv
 
+from definitions import AUTHOR_ID_FILE
+from definitions import ACKNOWLEDGEMENTS_ID_FILE
+
 __author__    = 'William Hanlon'
 __copyright__ = ''
 __credits__   = ''
@@ -154,12 +157,6 @@ def getCloudData(args, docID, mimeType, outFileName):
     # was grabbed from the cloud store in in ta_author.csv
     # otherwise we use a temp file that is deleted when the
     # program exits
-    #if args.savecsv:
-    #    csvfileName = 'ta_author.csv'
-    #    csvfile = open(csvfileName, 'wb')
-    #else:
-    #    csvfile = tempfile.NamedTemporaryFile(delete=False)
-    #    csvfileName = csvfile.name
     if outFileName is None:
         outFile = tempfile.NamedTemporaryFile(delete=False)
         outFileName = outFile.name
@@ -213,10 +210,10 @@ def main():
     if args.csvfile is None:
         # get the spreadsheet id from a local file
         try:
-            with open('ta_author_id.txt', 'r') as f:
+            with open(AUTHOR_ID_FILE, 'r') as f:
                 docID = f.readline().strip()
         except:
-            sys.stderr('Can\'t read ta_author_id.txt.')
+            sys.stderr('Can\'t read ', AUTHOR_ID_FILE)
             sys.exit(1)
         if args.savecsv:
             saveFileName = 'ta_author.csv'
@@ -229,10 +226,10 @@ def main():
     if args.ackfile is None:
         # get the spreadsheet id from a local file
         try:
-            with open('ta_acknowledgements_id.txt', 'r') as f:
+            with open(ACKNOWLEDGEMENTS_ID_FILE, 'r') as f:
                 docID = f.readline().strip()
         except:
-            sys.stderr('Can\'t read ta_acknowledgements_id.txt')
+            sys.stderr('Can\'t read ', ACKNOWLEDGEMENTS_ID_FILE)
             sys.exit(1)
         if args.saveack:
             saveFileName = 'ta_acknowledgements.txt'
