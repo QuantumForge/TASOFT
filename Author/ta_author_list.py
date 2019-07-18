@@ -46,8 +46,11 @@ from formats import plain_latex
 from formats import authblk
 from formats import arxiv
 
-from definitions import AUTHOR_ID_FILE
-from definitions import ACKNOWLEDGEMENTS_ID_FILE
+from config import AUTHOR_ID_FILE
+from config import ACKNOWLEDGEMENTS_ID_FILE
+from config import SCOPES
+from config import CLIENT_SECRET_FILE
+from config import APPLICATION_NAME
 
 __author__    = 'William Hanlon'
 __copyright__ = ''
@@ -85,9 +88,9 @@ except ImportError:
 else:
     moduleLoaded['oauth2client'] = True
 
-SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly'
-CLIENT_SECRET_FILE = 'client_secret_taauth.json'
-APPLICATION_NAME = 'TA_AUTHOR_LIST'
+#SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly'
+#CLIENT_SECRET_FILE = 'client_secret_taauth.json'
+#APPLICATION_NAME = 'TA_AUTHOR_LIST'
 
 def get_credentials(flags):
     """Gets valid credentials from storage.
