@@ -37,6 +37,8 @@ then provide those files as input using --csvfile and --ackfile.
 import argparse
 import io
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -177,6 +179,24 @@ def getCloudData(args, docID, mimeType, outFileName):
 
     return outFileName
 
+def makePDF(inputCsvFileName, inputAckFileName, pdfFileName):
+        pdfAbsPath = os.path.abspath(pdfFileName)
+        ocwd = os.getcwd()
+        tempDir = tempfile.mkdtemp()
+        tempFileName = os.path.join(tempDir, 'ta_auth_temp.tex')
+        author_list = authblk.authblk(inputCsvFileName, inputAckFileName,
+                tempFileName)
+        author_list.readAuthor()
+        author_list.dumpPreamble()
+        author_list.dumpAuthor()
+        author_list.dumpAcknowledge()
+        author_list.dumpFoot()
+        os.chdir(tempDir)
+        subprocess.call(['pdflatex', 'ta_auth_temp.tex'])
+        shutil.move('ta_auth_temp.pdf', pdfAbsPath)
+        os.chdir(ocwd)
+        shutil.rmtree(tempDir)
+
 def main():
     # now if 'csvfile' or 'ackfile' is empty assume the user wants to
     # read the spreadsheet directly from the cloud
@@ -269,6 +289,9 @@ def main():
     author_list.dumpAuthor()
     author_list.dumpAcknowledge()
     author_list.dumpFoot()
+
+    if args.pdf:
+        makePDF(inputCsvFile, inputAckFile, args.pdf)
 
     if args.csvfile is None and args.savecsv == False:
         os.unlink(inputCsvFile)
