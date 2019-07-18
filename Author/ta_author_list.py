@@ -258,6 +258,8 @@ def main():
             saveFileName = 'ta_acknowledgements.txt'
         else:
             saveFileName = None
+        # there's a lurking issue that docs exports the plain/text file as
+        # utf-8 with a bom as the first byte.
         inputAckFile = getCloudData(args, docID, 'text/plain', saveFileName)
     else:
         inputAckFile = args.ackfile
@@ -285,10 +287,11 @@ def main():
     # there is no readAcknowledgements because we'll just dump the simple
     # contents of the file pointed to by inputAckFile to args.output
 
-    author_list.dumpPreamble()
-    author_list.dumpAuthor()
-    author_list.dumpAcknowledge()
-    author_list.dumpFoot()
+    author_list.dump()
+    #author_list.dumpPreamble()
+    #author_list.dumpAuthor()
+    #author_list.dumpAcknowledge()
+    #author_list.dumpFoot()
 
     if args.pdf:
         makePDF(inputCsvFile, inputAckFile, args.pdf)

@@ -67,6 +67,12 @@ class ta_auth:
             sys.stdout.close()
             sys.stdout = origStdout
 
+    def dump(self):
+        self.dumpPreamble()
+        self.dumpAuthor()
+        self.dumpAcknowledge()
+        self.dumpFoot()
+
     def get_author_institution_numbers(self, institution, inst_dict):
 		"""Given the string of institutions (each enclosed in {}), lookup the
 		corresponding institution number from the dictionary of unique

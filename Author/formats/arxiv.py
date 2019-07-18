@@ -10,7 +10,7 @@ __author__    = 'William Hanlon'
 __copyright__ = ''
 __credits__   = ''
 __license__   = ''
-__version__   = '1.1.0'
+__version__   = '2.0.0'
 __maintainer  = 'William Hanlon'
 __email__     = 'whanlon@cosmic.utah.edu'
 __status__    = 'Production'
@@ -18,15 +18,15 @@ __status__    = 'Production'
 
 
 class arxiv(ta_auth):
-    def dumpAuthor(self, fileName = None):
+    def dumpAuthor(self):
         """Prints the TA author list in simple format for use on arXiv.org
         author lists."""
 
         inst_dict = self.sort_and_number_institutions()
 
-        if fileName is not None:
+        if self.outFileName is not None:
             origStdout = sys.stdout
-            sys.stdout = open(fileName, 'w')
+            sys.stdout = open(self.outFileName, 'w')
 
         authnum = 1
         line = 'Telescope Array Collaboration: '
@@ -60,7 +60,9 @@ class arxiv(ta_auth):
 
         print line
 
-
-        if fileName is not None:
+        if self.outFileName is not None:
             sys.stdout.close()
             sys.stdout = origStdout
+
+    def dump(self):
+        self.dumpAuthor()
