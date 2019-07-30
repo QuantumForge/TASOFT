@@ -211,9 +211,9 @@ def main():
             'and acknowledgements doc ID must be provided in a file named '
             'ta_acknowledgements_id.txt.)')
     parser.add_argument('--csvfile',
-            help = 'TA Author list file name in CSV format')
+            help = 'TA Author list input file name in CSV format')
     parser.add_argument('--ackfile',
-            help = 'TA acknowledgements file name in plain text format')
+            help = 'TA acknowledgements input file name in plain text format')
     parser.add_argument('--format', choices=['plainLatex', 'plainText',
         'authblk', 'aastex', 'arxiv'], default='plainLatex',
         help='select the output format')
