@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from operator import itemgetter
@@ -58,7 +58,7 @@ class arxiv(ta_auth):
             inst_count += 1
         line += ')'
 
-        print line
+        print(line)
 
         if self.outFileName is not None:
             sys.stdout.close()

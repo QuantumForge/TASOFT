@@ -10,6 +10,8 @@ __maintainer  = 'William Hanlon'
 __email__     = 'whanlon@cosmic.utah.edu'
 __status__    = 'Production'
 
+from collections import Counter
+import operator
 import csv
 import re
 import sys
@@ -19,6 +21,7 @@ class ta_auth:
     def __init__(self, authInFileName, ackInFileName,
             outFileName = None):
         self.author_data = []
+        self.institution_counter = Counter()
         self.outFileName = outFileName
         self.authInFileName = authInFileName
         self.ackInFileName = ackInFileName
@@ -33,7 +36,7 @@ class ta_auth:
 
         with(open(self.ackInFileName, 'rb')) as fin:
             for line in fin:
-                print line.strip()
+                print(line.strip())
 
         if self.outFileName is not None:
             sys.stdout.close()
@@ -61,7 +64,7 @@ class ta_auth:
         for sort_key, surname, initials, orcid, institution, status in \
                 self.author_data:
             name = initials + ' ' + surname
-            print name, '\t', orcid, '\t', institution, '\t', status
+            print(name, '\t', orcid, '\t', institution, '\t', status)
 
         if self.outFileName is not None:
             sys.stdout.close()
@@ -74,21 +77,21 @@ class ta_auth:
         self.dumpFoot()
 
     def get_author_institution_numbers(self, institution, inst_dict):
-		"""Given the string of institutions (each enclosed in {}), lookup the
-		corresponding institution number from the dictionary of unique
-		institution entries. Returns a sorted list of those institution
-		numbers."""
+        """Given the string of institutions (each enclosed in {}), lookup the
+        corresponding institution number from the dictionary of unique
+        institution entries. Returns a sorted list of those institution
+        numbers."""
 
-		# institutions this author belongs to.
-		insts = []
-		for m in re.split('\} *\{', institution):
-			insts.append(m.strip('{}'))
-		# get the institution numbers from the dictionary
-		inst_num = []
-		for j in insts:
-			inst_num.append(inst_dict[j])
+        # institutions this author belongs to.
+        insts = []
+        for m in re.split('\} *\{', institution):
+            insts.append(m.strip('{}'))
+	# get the institution numbers from the dictionary
+        inst_num = []
+        for j in insts:
+            inst_num.append(inst_dict[j])
 
-		return sorted(inst_num)
+        return sorted(inst_num)
 
     def readAuthor(self):
         """Reads in the CSV file created from the master spreadsheet.
@@ -103,16 +106,17 @@ class ta_auth:
         5) Institution Code
         6) Institution
         7) Status (e.g., deceased)"""
-        with open(self.authInFileName, 'rb') as authInFileName:
-            reader = csv.reader(authInFileName)
+
+        with open(self.authInFileName, 'rb') as authInFile:
+            reader = csv.reader(authInFile)
             # the first line is a header (it should be)
             reader.next() # skip the first line
             for row in reader:
-                surname      = row[0].strip()
-                initials     = row[2].strip()
-                orcid        = row[3].strip()
-                institutions = row[5].strip()
-                status       = row[6].strip()
+                surname      = row[0].strip().decode('utf-8')
+                initials     = row[2].strip().decode('utf-8')
+                orcid        = row[3].strip().decode('utf-8')
+                institutions = row[5].strip().decode('utf-8')
+                status       = row[6].strip().decode('utf-8')
                 # the author order is sorted according to 'last name, initials'
                 sort_key     = surname + ',' + initials
 
@@ -122,27 +126,39 @@ class ta_auth:
                     institutions, status))
 
     def sort_and_number_institutions(self):
-		"""Generate a unique list of institutions ordered by author name. key
-		is the institution name, value is the ordinal number. authorList must
-		already be sorted by author name."""
+        """Generate a unique list of institutions ordered by author name. key
+        is the institution name, value is the ordinal number. authorList must
+        already be sorted by author name."""
 
-		# list of institutions as they appear in the authorList (with repeated
-		# entries.
-		institutions = []
-		for entry in self.author_data:
-			l = []
-			for m in re.split('\} *\{', entry[4]):
-				l.append(m.strip('{}'))
-			for inst in sorted(l):
-				institutions.append(inst)
+        # list of institutions as they appear in the authorList (with repeated
+        # entries.
+	institutions = []
+	for entry in self.author_data:
+            l = []
+            for m in re.split('\} *\{', entry[4]):
+                l.append(m.strip('{}'))
+            for inst in sorted(l):
+                institutions.append(inst)
 
-		# generate a unique list of institutions ordered by author name. key is the
-		# institution name, value is the ordinal number
-		unique_count = 0
-		inst_dict = {}
-		for j in institutions:
-			if j not in inst_dict:
-				unique_count += 1
-				inst_dict[j] = unique_count
+        # get a count of the number of authors from each institution
+        self.institution_counter = Counter(institutions)
 
-		return inst_dict
+        # generate a unique list of institutions ordered by author
+        # name. key is the institution name, value is the ordinal number
+        unique_count = 0
+        inst_dict = {}
+        for j in institutions:
+            if j not in inst_dict:
+                unique_count += 1
+                inst_dict[j] = unique_count
+
+        return inst_dict
+
+    def stats_by_institution(self):
+        if len(self.institution_counter) == 0:
+            self.sort_and_number_institutions()
+
+        for k,v in sorted(self.institution_counter.items(),
+                key=operator.itemgetter(1), reverse = True):
+            print(k, v)
+

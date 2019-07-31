@@ -52,19 +52,19 @@ class aastex(ta_auth):
             if orcid != '':
                 line += '[' + orcid + ']'
             line += '{' + initials + ' ' + surname + '}'
-            print line
+            print(line)
 
             if status != '':
                 line = '\\altaffiliation{' + status + '}'
-                print line
+                print(line)
 
             # institutions this author belongs to
             for m in re.split('\} *\{', institution):
                 inst = m.strip('{}')
                 line = '\\affiliation{' + inst + '}'
-                print line
+                print(line)
 
-            print ''
+            print('')
 
         if self.outFileName is not None:
             sys.stdout.close()

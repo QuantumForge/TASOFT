@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """store module and program configuration data in a central location."""
 
 import os

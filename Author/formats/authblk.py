@@ -35,9 +35,11 @@ class authblk(ta_auth):
             sys.stdout = open(self.outFileName, 'w')
 
         print("""\\documentclass[10pt]{article}
+\\usepackage[utf8]{inputenc}
 \\usepackage[affil-it]{authblk}
 \\usepackage[margin=1in]{geometry}
 \\renewcommand\\Affilfont{\\itshape\\footnotesize}
+\\DeclareUnicodeCharacter{FEFF}{}
 
 \\title{Telescope Array Collaboration}
 
@@ -80,11 +82,11 @@ class authblk(ta_auth):
             if status != '':
                 line += '\\footnote{' + status + '}'
             line += '}'
-            print line
+            print(line.encode('utf-8'))
 
         for key, value in sorted(inst_dict.items(), key = itemgetter(1)):
             line = '\\affil[' + str(value) + ']{' + key + '}'
-            print line
+            print(line.encode('utf-8'))
 
         print('\\maketitle')
         print('')

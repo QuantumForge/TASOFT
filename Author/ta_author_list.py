@@ -36,6 +36,8 @@ then provide those files as input using --csvfile and --ackfile.
 
 import argparse
 import io
+import matplotlib.pyplot as plt
+import numpy as np
 import os
 import shutil
 import subprocess
@@ -173,8 +175,13 @@ def getCloudData(args, docID, mimeType, outFileName):
             sys.exit(1)
 
     # dump the cloud document to a local file
-    with outFile as f:
-        f.write(fh.getvalue())
+    #with outFile as f:
+        #z = fh.getvalue().decode('utf-8')
+        #print('fh.getvalue(): ', z)
+        #print(type(z))
+        #f.write(fh.getvalue().decode('utf-8'))
+    with io.open(outFileName, 'w', encoding='utf-8') as f:
+        f.write(fh.getvalue().decode('utf-8'))
     fh.close()
 
     return outFileName
@@ -195,7 +202,8 @@ def makePDF(inputCsvFileName, inputAckFileName, pdfFileName):
         subprocess.call(['pdflatex', 'ta_auth_temp.tex'])
         shutil.move('ta_auth_temp.pdf', pdfAbsPath)
         os.chdir(ocwd)
-        shutil.rmtree(tempDir)
+        print('tempDir: ', tempDir)
+        #shutil.rmtree(tempDir)
 
 def main():
     # now if 'csvfile' or 'ackfile' is empty assume the user wants to
@@ -217,7 +225,17 @@ def main():
     parser.add_argument('--format', choices=['plainLatex', 'plainText',
         'authblk', 'aastex', 'arxiv'], default='plainLatex',
         help='select the output format')
-    parser.add_argument('--output', help='select the file to write to')
+    parser.add_argument('--author-only', help='only output the author text, '
+            'not acknowledgements.')
+    parser.add_argument('--ack-only', help='only output the acknowledgements '
+            'text, not authors')
+    parser.add_argument('--stub-only', help='do not try to create a full '
+            'LaTeX document, only output the relevant parts (author and/or '
+            'acknowledgements)')
+    parser.add_argument('--stats', help='dump counts of institutions and '
+            'generate plot', action='store_true', default=False)
+    parser.add_argument('--output', help='select the file to write to. '
+            'if not provided, output is directed to STDOUT')
     parser.add_argument('--pdf', help='generate a PDF version of the '
             'authorlist from the authblk template. NOT YET IMPLEMENTED.')
     parser.add_argument('--savecsv', action='store_true', default=False,
@@ -295,6 +313,23 @@ def main():
 
     if args.pdf:
         makePDF(inputCsvFile, inputAckFile, args.pdf)
+
+    if (args.stats):
+        print('')
+        print('Institution counts:')
+        author_list.stats_by_institution()
+        c = author_list.institution_counter
+        bar_ind = np.arange(len(c))
+        bar_x = c.keys()
+        bar_y = c.values()
+        width = 0.35
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        bar_chart = ax.bar(bar_ind, bar_y, width=width)
+        ax.set_xticklabels(bar_x)
+        plt.show()
+
 
     if args.csvfile is None and args.savecsv == False:
         os.unlink(inputCsvFile)

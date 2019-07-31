@@ -99,23 +99,23 @@ class plain_latex(ta_auth):
             line += '}$'
             if linenum != len(self.author_data):
                 line += ','
-            print line
+            print(line)
             linenum += 1
 
-        print '\\bigskip'
-        print '\\par\\noindent'
-        print '{\\footnotesize\\it'
+        print('\\bigskip')
+        print('\\par\\noindent')
+        print('{\\footnotesize\\it')
 
         for key, value in sorted(inst_dict.items(), key = itemgetter(1)):
             line = '$^{' + str(value) + '}$ ' + key + ' \\\\'
-            print line
+            print(line)
 
-        print ''
+        print('')
         for i in range(len(status_data)):
-            print '\\let\\thefootnote\\relax\\footnote{{$\\ssymbol{{{0}}}$ {1}}}'.format(i + 1, status_data[i])
-        print '\\addtocounter{footnote}{-1}\\let\\thefootnote\\svthefootnote'
-        print '}'
-        print '\\par\\noindent'
+            print('\\let\\thefootnote\\relax\\footnote{{$\\ssymbol{{{0}}}$ {1}}}'.format(i + 1, status_data[i]))
+        print('\\addtocounter{footnote}{-1}\\let\\thefootnote\\svthefootnote')
+        print('}')
+        print('\\par\\noindent')
 
         if self.outFileName is not None:
             sys.stdout.close()
