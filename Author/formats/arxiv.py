@@ -4,7 +4,7 @@
 from operator import itemgetter
 import sys
 
-from ta_auth import ta_auth
+from .ta_auth import ta_auth
 
 __author__    = 'William Hanlon'
 __copyright__ = ''

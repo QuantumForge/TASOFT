@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """store module and program configuration data in a central location."""
 
 import os

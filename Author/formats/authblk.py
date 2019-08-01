@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """This function takes an authorlist which is list of tuples with the following
 values
@@ -14,7 +14,7 @@ from operator import itemgetter
 import re
 import sys
 
-from ta_auth import ta_auth
+from .ta_auth import ta_auth
 
 __author__    = 'William Hanlon'
 __copyright__ = ''
@@ -66,7 +66,7 @@ class authblk(ta_auth):
         #print '\\usepackage[affil-it]{authblk}'
         #print '\\renewcommand\\Affilfont{\\itshape\\footnotesize}'
 
-        for _, surname, initials, _, institution, status in self.author_data:
+        for _, surname, initials, _, _, institution, status in self.author_data:
             line = '\\author['
 
             # get a sorted list of institution numbers for this author
@@ -82,11 +82,11 @@ class authblk(ta_auth):
             if status != '':
                 line += '\\footnote{' + status + '}'
             line += '}'
-            print(line.encode('utf-8'))
+            print(line)
 
         for key, value in sorted(inst_dict.items(), key = itemgetter(1)):
             line = '\\affil[' + str(value) + ']{' + key + '}'
-            print(line.encode('utf-8'))
+            print(line)
 
         print('\\maketitle')
         print('')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """This function takes an authorlist which is list of tuples with the following
 values
@@ -13,7 +13,7 @@ and produces the author list output formatted for AASTeX publications."""
 import re
 import sys
 
-from ta_auth import ta_auth
+from .ta_auth import ta_auth
 
 __author__    = 'William Hanlon'
 __copyright__ = ''

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """Prints out the TA authorlist and acknowledgements using a
@@ -138,7 +138,7 @@ def getCloudData(args, docID, mimeType, outFileName):
         moduleLoaded['apiclient'] == False or
         moduleLoaded['oauth2client'] == False):
         modMissing = ''
-        for k, v in moduleLoaded.iteritems():
+        for k, v in moduleLoaded.items():
             if v == False:
                 modMissing += k + ' '
 
@@ -202,8 +202,7 @@ def makePDF(inputCsvFileName, inputAckFileName, pdfFileName):
         subprocess.call(['pdflatex', 'ta_auth_temp.tex'])
         shutil.move('ta_auth_temp.pdf', pdfAbsPath)
         os.chdir(ocwd)
-        print('tempDir: ', tempDir)
-        #shutil.rmtree(tempDir)
+        shutil.rmtree(tempDir)
 
 def main():
     # now if 'csvfile' or 'ackfile' is empty assume the user wants to
@@ -322,12 +321,14 @@ def main():
         bar_ind = np.arange(len(c))
         bar_x = c.keys()
         bar_y = c.values()
-        width = 0.35
+        width = 0.95
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        bar_chart = ax.bar(bar_ind, bar_y, width=width)
-        ax.set_xticklabels(bar_x)
+        ax.bar(bar_ind, bar_y, width=width)
+        ax.set_xticks(bar_ind)
+        ax.set_xticklabels(bar_x, rotation=45, rotation_mode='anchor',
+                ha='right')
         plt.show()
 
 

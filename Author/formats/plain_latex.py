@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """This function takes an authorlist which is list of tuples with the following
 values
@@ -14,7 +14,7 @@ from operator import itemgetter
 import re
 import sys
 
-from ta_auth import ta_auth
+from .ta_auth import ta_auth
 
 __author__    = 'William Hanlon'
 __copyright__ = ''
@@ -70,7 +70,7 @@ class plain_latex(ta_auth):
         status_data = []
 
         linenum = 1
-        for _, surname, initials, _, institution, status in self.author_data:
+        for _, surname, initials, _, _, institution, status in self.author_data:
             line = ''
             if linenum == len(self.author_data):
                 line = 'and '

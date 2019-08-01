@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 __author__    = 'William Hanlon'
@@ -36,7 +36,7 @@ class ta_auth:
 
         with(open(self.ackInFileName, 'rb')) as fin:
             for line in fin:
-                print(line.strip())
+                print(line.decode('utf8').strip())
 
         if self.outFileName is not None:
             sys.stdout.close()
@@ -61,7 +61,7 @@ class ta_auth:
             origStdout = sys.stdout
             sys.stdout = open(self.outFileName, 'w')
 
-        for sort_key, surname, initials, orcid, institution, status in \
+        for sort_key, surname, initials, orcid, _, institution, status in \
                 self.author_data:
             name = initials + ' ' + surname
             print(name, '\t', orcid, '\t', institution, '\t', status)
@@ -107,23 +107,24 @@ class ta_auth:
         6) Institution
         7) Status (e.g., deceased)"""
 
-        with open(self.authInFileName, 'rb') as authInFile:
+        with open(self.authInFileName, 'rt', encoding='utf8') as authInFile:
             reader = csv.reader(authInFile)
             # the first line is a header (it should be)
-            reader.next() # skip the first line
+            next(reader) # skip the first line
             for row in reader:
-                surname      = row[0].strip().decode('utf-8')
-                initials     = row[2].strip().decode('utf-8')
-                orcid        = row[3].strip().decode('utf-8')
-                institutions = row[5].strip().decode('utf-8')
-                status       = row[6].strip().decode('utf-8')
+                surname      = row[0].strip()
+                initials     = row[2].strip()
+                orcid        = row[3].strip()
+                institution_code = row[4].strip()
+                institutions = row[5].strip()
+                status       = row[6].strip()
                 # the author order is sorted according to 'last name, initials'
                 sort_key     = surname + ',' + initials
 
                 name = initials + ' ' + surname
 
                 self.author_data.append((sort_key, surname, initials, orcid,
-                    institutions, status))
+                    institution_code, institutions, status))
 
     def sort_and_number_institutions(self):
         """Generate a unique list of institutions ordered by author name. key
@@ -132,16 +133,25 @@ class ta_auth:
 
         # list of institutions as they appear in the authorList (with repeated
         # entries.
-	institutions = []
-	for entry in self.author_data:
+        institutions = []
+        for entry in self.author_data:
             l = []
-            for m in re.split('\} *\{', entry[4]):
+            for m in re.split('\} *\{', entry[5]):
                 l.append(m.strip('{}'))
             for inst in sorted(l):
                 institutions.append(inst)
 
+        institution_codes = []
+        for entry in self.author_data:
+            l = []
+            for m in re.split(',', entry[4]):
+                l.append(m.strip())
+            for inst in sorted(l):
+                institution_codes.append(inst)
+
+
         # get a count of the number of authors from each institution
-        self.institution_counter = Counter(institutions)
+        self.institution_counter = Counter(institution_codes)
 
         # generate a unique list of institutions ordered by author
         # name. key is the institution name, value is the ordinal number
