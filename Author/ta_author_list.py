@@ -187,22 +187,33 @@ def getCloudData(args, docID, mimeType, outFileName):
     return outFileName
 
 def makePDF(inputCsvFileName, inputAckFileName, pdfFileName):
-        pdfAbsPath = os.path.abspath(pdfFileName)
-        ocwd = os.getcwd()
-        tempDir = tempfile.mkdtemp()
-        tempFileName = os.path.join(tempDir, 'ta_auth_temp.tex')
-        author_list = authblk.authblk(inputCsvFileName, inputAckFileName,
-                tempFileName)
+    """Make a PDF file that contains the author list and acknowledgements."""
+    pdfAbsPath = os.path.abspath(pdfFileName)
+    ocwd = os.getcwd()
+    tempDir = tempfile.mkdtemp()
+    tempFileName = os.path.join(tempDir, 'ta_auth_temp.tex')
+
+    author_list = authblk.authblk(inputCsvFileName, inputAckFileName,
+            tempFileName)
+
+    if inputCsvFileName is not None:
         author_list.readAuthor()
-        author_list.dumpPreamble()
+
+    author_list.dumpPreamble()
+
+    if inputCsvFileName is not None:
         author_list.dumpAuthor()
+
+    if inputAckFileName is not None:
         author_list.dumpAcknowledge()
-        author_list.dumpFoot()
-        os.chdir(tempDir)
-        subprocess.call(['pdflatex', 'ta_auth_temp.tex'])
-        shutil.move('ta_auth_temp.pdf', pdfAbsPath)
-        os.chdir(ocwd)
-        shutil.rmtree(tempDir)
+
+    author_list.dumpFoot()
+
+    os.chdir(tempDir)
+    subprocess.call(['pdflatex', 'ta_auth_temp.tex'])
+    shutil.move('ta_auth_temp.pdf', pdfAbsPath)
+    os.chdir(ocwd)
+    shutil.rmtree(tempDir)
 
 def main():
     # now if 'csvfile' or 'ackfile' is empty assume the user wants to
@@ -224,19 +235,21 @@ def main():
     parser.add_argument('--format', choices=['plainLatex', 'plainText',
         'authblk', 'aastex', 'arxiv'], default='plainLatex',
         help='select the output format')
-    parser.add_argument('--author-only', help='only output the author text, '
-            'not acknowledgements.')
-    parser.add_argument('--ack-only', help='only output the acknowledgements '
-            'text, not authors')
     parser.add_argument('--stub-only', help='do not try to create a full '
             'LaTeX document, only output the relevant parts (author and/or '
-            'acknowledgements)')
+            'acknowledgements)', default=False, action='store_true')
     parser.add_argument('--stats', help='dump counts of institutions and '
             'generate plot', action='store_true', default=False)
     parser.add_argument('--output', help='select the file to write to. '
             'if not provided, output is directed to STDOUT')
     parser.add_argument('--pdf', help='generate a PDF version of the '
-            'authorlist from the authblk template. NOT YET IMPLEMENTED.')
+            'authorlist and acknowledgements from the authblk template.',
+            default=False, action='store_true')
+    parser.add_argument('--include-ack', help='include acknowledments in '
+            'output latex and pdf.', default=False, action='store_true')
+    parser.add_argument('--ack-only', help='only include acknowledments in '
+            'output latex and pdf (authors are removed).', default=False,
+            action='store_true')
     parser.add_argument('--savecsv', action='store_true', default=False,
         help='save downloaded csv to ta_author.csv when reading from the cloud')
     parser.add_argument('--saveack', action='store_true', default=False,
@@ -304,23 +317,51 @@ def main():
     # there is no readAcknowledgements because we'll just dump the simple
     # contents of the file pointed to by inputAckFile to args.output
 
-    author_list.dump()
-    #author_list.dumpPreamble()
-    #author_list.dumpAuthor()
-    #author_list.dumpAcknowledge()
-    #author_list.dumpFoot()
+    # set the flags. argparse is designed for easy toggling of multiple
+    # booleans at the same time.
+    author_flag = True
+    ack_flag = False
+    if args.include_ack:
+        ack_flag = True
+    if args.ack_only:
+        author_flag = False
+        ack_flag = True
+
+    if author_flag and ack_flag:
+        author_list.dump()
+    elif author_flag and not ack_flag:
+        if not args.stub_only:
+            author_list.dumpPreamble()
+        author_list.dumpAuthor()
+        if not args.stub_only:
+            author_list.dumpFoot()
+    elif not author_flag and ack_flag:
+        if not args.stub_only:
+            author_list.dumpPreamble()
+        author_list.dumpAcknowledge()
+        if not args.stub_only:
+            author_list.dumpFoot()
 
     if args.pdf:
-        makePDF(inputCsvFile, inputAckFile, args.pdf)
+        if author_flag and ack_flag:
+            makePDF(inputCsvFile, inputAckFile, args.pdf)
+        elif author_flag and not ack_flag:
+            makePDF(inputCsvFile, None, args.include_author)
+        elif not author_flag and ack_flag:
+            makePDF(None, inputAckFile, args.include_ack)
 
     if (args.stats):
         print('')
         print('Institution counts:')
         author_list.stats_by_institution()
         c = author_list.institution_counter
+        # sort institutions by number of authors
+        sorted_c = c.most_common();
         bar_ind = np.arange(len(c))
-        bar_x = c.keys()
-        bar_y = c.values()
+        #bar_x = c.keys()
+        #bar_y = c.values()
+        bar_x = list(zip(*sorted_c))[0]
+        bar_y = list(zip(*sorted_c))[1]
         width = 0.95
 
         fig = plt.figure()
@@ -336,6 +377,7 @@ def main():
         os.unlink(inputCsvFile)
     if args.ackfile is None and args.saveack == False:
         os.unlink(inputAckFile)
+
 
 if __name__ == '__main__':
     main()

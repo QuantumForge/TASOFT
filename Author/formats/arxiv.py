@@ -30,7 +30,7 @@ class arxiv(ta_auth):
 
         authnum = 1
         line = 'Telescope Array Collaboration: '
-        for _, surname, initials, _, institution, _ in self.author_data:
+        for _, surname, initials, _, _, institution, _ in self.author_data:
             line += initials + ' ' + surname + ' ('
 
             inst_num = self.get_author_institution_numbers(institution, inst_dict)
@@ -66,3 +66,10 @@ class arxiv(ta_auth):
 
     def dump(self):
         self.dumpAuthor()
+
+    def dumpFoot(self):
+        pass
+
+    def dumpAcknowledge(self):
+        pass
+

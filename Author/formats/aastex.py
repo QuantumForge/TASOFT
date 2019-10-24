@@ -46,7 +46,7 @@ class aastex(ta_auth):
             origStdout = sys.stdout
             sys.stdout = open(self.outFileName, 'a')
 
-        for _, surname, initials, orcid, institution, status in \
+        for _, surname, initials, orcid, _, institution, status in \
                 self.author_data:
             line = '\\author'
             if orcid != '':

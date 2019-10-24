@@ -168,7 +168,10 @@ class ta_auth:
         if len(self.institution_counter) == 0:
             self.sort_and_number_institutions()
 
-        for k,v in sorted(self.institution_counter.items(),
-                key=operator.itemgetter(1), reverse = True):
+        #for k,v in sorted(self.institution_counter.items(),
+        #        key=operator.itemgetter(1), reverse = True):
+        #    print(k, v)
+
+        for k,v in self.institution_counter.most_common():
             print(k, v)
 
