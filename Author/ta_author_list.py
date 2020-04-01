@@ -243,8 +243,7 @@ def main():
     parser.add_argument('--output', help='select the file to write to. '
             'if not provided, output is directed to STDOUT')
     parser.add_argument('--pdf', help='generate a PDF version of the '
-            'authorlist and acknowledgements from the authblk template.',
-            default=False, action='store_true')
+            'authorlist and acknowledgements from the authblk template.')
     parser.add_argument('--include-ack', help='include acknowledments in '
             'output latex and pdf.', default=False, action='store_true')
     parser.add_argument('--ack-only', help='only include acknowledments in '
@@ -317,7 +316,7 @@ def main():
     # there is no readAcknowledgements because we'll just dump the simple
     # contents of the file pointed to by inputAckFile to args.output
 
-    # set the flags. argparse is designed for easy toggling of multiple
+    # set the flag defaults. argparse is designed for easy toggling of multiple
     # booleans at the same time.
     author_flag = True
     ack_flag = False
@@ -346,9 +345,9 @@ def main():
         if author_flag and ack_flag:
             makePDF(inputCsvFile, inputAckFile, args.pdf)
         elif author_flag and not ack_flag:
-            makePDF(inputCsvFile, None, args.include_author)
+            makePDF(inputCsvFile, None, args.pdf)
         elif not author_flag and ack_flag:
-            makePDF(None, inputAckFile, args.include_ack)
+            makePDF(None, inputAckFile, args.pdf)
 
     if (args.stats):
         print('')
@@ -364,12 +363,15 @@ def main():
         bar_y = list(zip(*sorted_c))[1]
         width = 0.95
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(15, 9))
         ax = fig.add_subplot(111)
         ax.bar(bar_ind, bar_y, width=width)
         ax.set_xticks(bar_ind)
         ax.set_xticklabels(bar_x, rotation=45, rotation_mode='anchor',
                 ha='right')
+        ax.set_title('TA Authors by Institution')
+        ax.set_xlabel('Institution')
+        ax.set_ylabel('Number of Authors')
         plt.show()
 
 
