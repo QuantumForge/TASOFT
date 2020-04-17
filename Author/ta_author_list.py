@@ -265,7 +265,7 @@ def main():
             with open(AUTHOR_ID_FILE, 'r') as f:
                 docID = f.readline().strip()
         except:
-            sys.stderr('Can\'t read ', AUTHOR_ID_FILE)
+            print('Can\'t read ', AUTHOR_ID_FILE, file=sys.stderr)
             sys.exit(1)
         if args.savecsv:
             saveFileName = 'ta_author.csv'
@@ -281,7 +281,7 @@ def main():
             with open(ACKNOWLEDGEMENTS_ID_FILE, 'r') as f:
                 docID = f.readline().strip()
         except:
-            sys.stderr('Can\'t read ', ACKNOWLEDGEMENTS_ID_FILE)
+            print('Can\'t read ', ACKNOWLEDGEMENTS_ID_FILE, file=sys.stderr)
             sys.exit(1)
         if args.saveack:
             saveFileName = 'ta_acknowledgements.txt'
