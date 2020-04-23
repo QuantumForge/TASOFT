@@ -290,6 +290,9 @@ def main():
         # there's a lurking issue that docs exports the plain/text file as
         # utf-8 with a bom as the first byte.
         inputAckFile = getCloudData(args, docID, 'text/plain', saveFileName)
+        # strip the BOM
+        s = open(inputAckFile, mode='r', encoding='utf-8-sig').read()
+        open(inputAckFile, mode='w', encoding='utf-8').write(s)
     else:
         inputAckFile = args.ackfile
 
