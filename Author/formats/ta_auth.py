@@ -175,3 +175,6 @@ class ta_auth:
         for k,v in self.institution_counter.most_common():
             print(k, v)
 
+        print('')
+        print('# of institutions: ', len(self.institution_counter))
+        print('# of authors: ', len(self.author_data))
