@@ -33,7 +33,8 @@ class arxiv(ta_auth):
         for _, surname, initials, _, _, institution, _ in self.author_data:
             line += initials + ' ' + surname + ' ('
 
-            inst_num = self.get_author_institution_numbers(institution, inst_dict)
+            inst_num = self.get_author_institution_numbers(institution,
+                    inst_dict)
 
             i = 0
             # institution numbers are sorted

@@ -26,6 +26,14 @@ class ta_auth:
         self.authInFileName = authInFileName
         self.ackInFileName = ackInFileName
 
+        # stats
+        self.number_of_authors = 0
+        self.number_of_institutions = 0
+        self.number_of_countries = 0
+        self.authors_in_institution = {}
+        self.authors_in_country = {}
+        self.institutions_in_country = {}
+
     def dumpPreamble(self):
         pass
 
