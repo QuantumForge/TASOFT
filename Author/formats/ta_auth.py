@@ -21,7 +21,8 @@ class ta_auth:
     def __init__(self, authInFileName, ackInFileName,
             outFileName = None):
         self.author_data = []
-        self.institution_counter = Counter()
+        # institutional_ordinal is a dictionary of institution code
+        self.institution_ordinal = {}
         self.outFileName = outFileName
         self.authInFileName = authInFileName
         self.ackInFileName = ackInFileName
@@ -30,9 +31,9 @@ class ta_auth:
         self.number_of_authors = 0
         self.number_of_institutions = 0
         self.number_of_countries = 0
-        self.authors_in_institution = {}
-        self.authors_in_country = {}
-        self.institutions_in_country = {}
+        self.institution_counter = Counter()
+        self.authors_in_country_counter = Counter()
+        self.institutions_in_country_counter = Counter()
 
     def dumpPreamble(self):
         pass
@@ -134,6 +135,15 @@ class ta_auth:
                 self.author_data.append((sort_key, surname, initials, orcid,
                     institution_code, institutions, status))
 
+        # ensure the list is sorted. this also effects institution numbers
+        # when they are determined in a later function call. sorting a list
+        # of tuples automatically sorts by the first element of each
+        # tuple.
+        self.author_data.sort()
+
+        self.number_of_authors = len(self.author_data)
+        self.sort_and_number_institutions()
+
     def sort_and_number_institutions(self):
         """Generate a unique list of institutions ordered by author name. key
         is the institution name, value is the ordinal number. authorList must
@@ -142,21 +152,19 @@ class ta_auth:
         # list of institutions as they appear in the authorList (with repeated
         # entries.
         institutions = []
+        institution_codes = []
         for entry in self.author_data:
             l = []
             for m in re.split('\} *\{', entry[5]):
                 l.append(m.strip('{}'))
             for inst in sorted(l):
                 institutions.append(inst)
-
-        institution_codes = []
-        for entry in self.author_data:
+            
             l = []
             for m in re.split(',', entry[4]):
                 l.append(m.strip())
             for inst in sorted(l):
                 institution_codes.append(inst)
-
 
         # get a count of the number of authors from each institution
         self.institution_counter = Counter(institution_codes)
@@ -164,13 +172,11 @@ class ta_auth:
         # generate a unique list of institutions ordered by author
         # name. key is the institution name, value is the ordinal number
         unique_count = 0
-        inst_dict = {}
+        self.institutional_ordinal = {}
         for j in institutions:
-            if j not in inst_dict:
+            if j not in self.institutional_ordinal:
                 unique_count += 1
-                inst_dict[j] = unique_count
-
-        return inst_dict
+                self.institutional_ordinal[j] = unique_count
 
     def stats_by_institution(self):
         if len(self.institution_counter) == 0:
