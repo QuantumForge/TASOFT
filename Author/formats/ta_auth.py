@@ -20,8 +20,18 @@ class ta_auth:
     """Base class for TA author data formatting classes."""
     def __init__(self, authInFileName, ackInFileName,
             outFileName = None):
+        # list of tuples, where tuple content is
+        #(sort key,
+        # surname,
+        # intials,
+        # orcid,
+        # institution codes
+        # institutions,
+        # status)
         self.author_data = []
-        # institutional_ordinal is a dictionary of institution code
+        # institution_ordinal is a dictionary of institution names where
+        # key is the full institution name and value is the order number.
+        # order number is based on author ordering
         self.institution_ordinal = {}
         self.outFileName = outFileName
         self.authInFileName = authInFileName
@@ -33,7 +43,7 @@ class ta_auth:
         self.number_of_countries = 0
         self.institution_counter = Counter()
         self.authors_in_country_counter = Counter()
-        self.institutions_in_country_counter = Counter()
+        self.institutions_in_country_counter = {}
 
     def dumpPreamble(self):
         pass
@@ -85,7 +95,7 @@ class ta_auth:
         self.dumpAcknowledge()
         self.dumpFoot()
 
-    def get_author_institution_numbers(self, institution, inst_dict):
+    def get_author_institution_numbers(self, institution):
         """Given the string of institutions (each enclosed in {}), lookup the
         corresponding institution number from the dictionary of unique
         institution entries. Returns a sorted list of those institution
@@ -98,7 +108,7 @@ class ta_auth:
 	# get the institution numbers from the dictionary
         inst_num = []
         for j in insts:
-            inst_num.append(inst_dict[j])
+            inst_num.append(self.institution_ordinal[j])
 
         return sorted(inst_num)
 
@@ -128,9 +138,7 @@ class ta_auth:
                 institutions = row[5].strip()
                 status       = row[6].strip()
                 # the author order is sorted according to 'last name, initials'
-                sort_key     = surname + ',' + initials
-
-                name = initials + ' ' + surname
+                sort_key     = surname.upper() + ',' + initials.upper()
 
                 self.author_data.append((sort_key, surname, initials, orcid,
                     institution_code, institutions, status))
@@ -143,6 +151,7 @@ class ta_auth:
 
         self.number_of_authors = len(self.author_data)
         self.sort_and_number_institutions()
+        self.stats_by_country()
 
     def sort_and_number_institutions(self):
         """Generate a unique list of institutions ordered by author name. key
@@ -168,16 +177,49 @@ class ta_auth:
 
         # get a count of the number of authors from each institution
         self.institution_counter = Counter(institution_codes)
+        self.number_of_institutions = len(self.institution_counter)
 
         # generate a unique list of institutions ordered by author
         # name. key is the institution name, value is the ordinal number
         unique_count = 0
-        self.institutional_ordinal = {}
+        self.institution_ordinal = {}
         for j in institutions:
-            if j not in self.institutional_ordinal:
+            if j not in self.institution_ordinal:
                 unique_count += 1
-                self.institutional_ordinal[j] = unique_count
+                self.institution_ordinal[j] = unique_count
 
+    def stats_by_country(self):
+        countries = []
+        inst_and_country = []
+        for entry in self.author_data:
+            c = []
+            i = 0
+            for m in re.split('\} *\{', entry[5]):
+                institution = m.strip('{}')
+                country = re.split(',', institution)[-1].strip()
+                c.append(country)
+
+                icodes = re.split(',', entry[4])
+                inst_and_country.append((country, icodes[i]))
+                i += 1
+
+            # some authors are in multiple institutions in the same country
+            # causing double counting. get a unique list of countries
+            # for the current author
+            for x in set(c):
+                countries.append(x)
+
+        self.authors_in_country_counter = Counter(countries)
+        self.number_of_countries = len(self.authors_in_country_counter)
+
+        self.institutions_in_country_counter = {}
+        for k, v in Counter(inst_and_country).items():
+            self.institutions_in_country_counter[k[0]] = 0
+        for x in self.institutions_in_country_counter.keys():
+            for k, v in Counter(inst_and_country).items():
+                if (x == k[0]):
+                    self.institutions_in_country_counter[x] += 1
+         
     def stats_by_institution(self):
         if len(self.institution_counter) == 0:
             self.sort_and_number_institutions()
@@ -190,5 +232,12 @@ class ta_auth:
             print(k, v)
 
         print('')
-        print('# of institutions: ', len(self.institution_counter))
-        print('# of authors: ', len(self.author_data))
+        print('# of institutions: ', self.number_of_institutions)
+        print('# of authors: ', self.number_of_authors)
+        print('# of countries: ', self.number_of_countries)
+        print('Country, # of authors:')
+        for k, v in self.authors_in_country_counter.items():
+            print(k, v)
+        print('Country, # of institutions:')
+        for k, v in self.institutions_in_country_counter.items():
+            print(k, v)

@@ -52,7 +52,7 @@ class plain_latex(ta_auth):
     def dumpAuthor(self):
     # generate a unique list of insitutions and their numbering as they
     #should appear in the author list
-        inst_dict = self.sort_and_number_institutions()
+        self.sort_and_number_institutions()
 
         if self.outFileName is not None:
             origStdout = sys.stdout
@@ -80,8 +80,7 @@ class plain_latex(ta_auth):
             line = line + initials + "~" + surname + '$^{'
 
             # get a sorted list of institution numbers for this author
-            inst_num = self.get_author_institution_numbers(institution,
-                    inst_dict)
+            inst_num = self.get_author_institution_numbers(institution)
 
             i = 0
             # institution numbers are sorted
@@ -106,7 +105,8 @@ class plain_latex(ta_auth):
         print('\\par\\noindent')
         print('{\\footnotesize\\it')
 
-        for key, value in sorted(inst_dict.items(), key = itemgetter(1)):
+        for key, value in sorted(self.institution_ordinal.items(),
+                key = itemgetter(1)):
             line = '$^{' + str(value) + '}$ ' + key + ' \\\\'
             print(line)
 
