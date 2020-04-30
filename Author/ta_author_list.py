@@ -354,7 +354,6 @@ def main():
 
     if (args.stats):
         print('')
-        print('Institution counts:')
         author_list.stats_by_institution()
         c = author_list.institution_counter
         # sort institutions by number of authors

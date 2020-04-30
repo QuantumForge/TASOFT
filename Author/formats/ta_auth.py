@@ -200,7 +200,7 @@ class ta_auth:
                 c.append(country)
 
                 icodes = re.split(',', entry[4])
-                inst_and_country.append((country, icodes[i]))
+                inst_and_country.append((country, icodes[i].strip()))
                 i += 1
 
             # some authors are in multiple institutions in the same country
@@ -217,7 +217,7 @@ class ta_auth:
             self.institutions_in_country_counter[k[0]] = 0
         for x in self.institutions_in_country_counter.keys():
             for k, v in Counter(inst_and_country).items():
-                if (x == k[0]):
+                if x == k[0]:
                     self.institutions_in_country_counter[x] += 1
          
     def stats_by_institution(self):
@@ -228,12 +228,14 @@ class ta_auth:
         #        key=operator.itemgetter(1), reverse = True):
         #    print(k, v)
 
+        print('Authors from each institution:')
         for k,v in self.institution_counter.most_common():
             print(k, v)
 
         print('')
         print('# of institutions: ', self.number_of_institutions)
         print('# of authors: ', self.number_of_authors)
+
         print('# of countries: ', self.number_of_countries)
         print('Country, # of authors:')
         for k, v in self.authors_in_country_counter.items():
