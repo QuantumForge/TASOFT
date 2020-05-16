@@ -22,7 +22,7 @@ class arxiv(ta_auth):
         """Prints the TA author list in simple format for use on arXiv.org
         author lists."""
 
-        inst_dict = self.sort_and_number_institutions()
+        self.sort_and_number_institutions()
 
         if self.outFileName is not None:
             origStdout = sys.stdout
@@ -33,8 +33,7 @@ class arxiv(ta_auth):
         for _, surname, initials, _, _, institution, _ in self.author_data:
             line += initials + ' ' + surname + ' ('
 
-            inst_num = self.get_author_institution_numbers(institution,
-                    inst_dict)
+            inst_num = self.get_author_institution_numbers(institution)
 
             i = 0
             # institution numbers are sorted
@@ -52,9 +51,10 @@ class arxiv(ta_auth):
         # now add the list of institutions
         inst_count = 1
         line += ' ('
-        for key, value in sorted(inst_dict.items(), key = itemgetter(1)):
+        for key, value in sorted(self.institution_ordinal.items(), key =
+                itemgetter(1)):
             line = line + '(' + str(value) + ') ' + key 
-            if inst_count != len(inst_dict):
+            if inst_count != len(self.institution_ordinal):
                 line += ', '
             inst_count += 1
         line += ')'

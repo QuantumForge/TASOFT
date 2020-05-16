@@ -56,7 +56,7 @@ class authblk(ta_auth):
     def dumpAuthor(self):
         # generate a unique list of insitutions and their numbering as they
         # should appear in the author list
-        inst_dict = self.sort_and_number_institutions()
+        self.sort_and_number_institutions()
 
         if self.outFileName is not None:
             origStdout = sys.stdout
@@ -70,7 +70,7 @@ class authblk(ta_auth):
             line = '\\author['
 
             # get a sorted list of institution numbers for this author
-            inst_num = self.get_author_institution_numbers(institution, inst_dict)
+            inst_num = self.get_author_institution_numbers(institution)
 
             i = 0
             for j in inst_num:
@@ -84,7 +84,8 @@ class authblk(ta_auth):
             line += '}'
             print(line)
 
-        for key, value in sorted(inst_dict.items(), key = itemgetter(1)):
+        for key, value in sorted(self.institution_ordinal.items(), key =
+                itemgetter(1)):
             line = '\\affil[' + str(value) + ']{' + key + '}'
             print(line)
 
