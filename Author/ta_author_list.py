@@ -49,6 +49,7 @@ from formats import aastex
 from formats import plain_latex
 from formats import authblk
 from formats import arxiv
+from formats import revtex
 
 from config import AUTHOR_ID_FILE
 from config import ACKNOWLEDGEMENTS_ID_FILE
@@ -233,7 +234,7 @@ def main():
     parser.add_argument('--ackfile',
             help = 'TA acknowledgements input file name in plain text format')
     parser.add_argument('--format', choices=['plainLatex', 'plainText',
-        'authblk', 'aastex', 'arxiv'], default='plainLatex',
+        'authblk', 'aastex', 'arxiv', 'revtex'], default='plainLatex',
         help='select the output format')
     parser.add_argument('--stub-only', help='do not try to create a full '
             'LaTeX document, only output the relevant parts (author and/or '
@@ -309,6 +310,8 @@ def main():
         author_list = aastex.aastex(inputCsvFile, inputAckFile, args.output)
     elif args.format == 'arxiv':
         author_list = arxiv.arxiv(inputCsvFile, inputAckFile, args.output)
+    elif args.format == 'revtex':
+        author_list = revtex.revtex(inputCsvFile, inputAckFile, args.output)
     else:
         author_list = ta_auth.ta_auth(inputCsvFile, inputAckFile, args.output)
 
