@@ -2,7 +2,7 @@
 
 # Author: Mathew Potts
 # Date: 2022/03/14
-# Purpose: 
+# Purpose: Post TA author files to tadserv
 ############################################################################################################
 ## IMPORT LIBS
 import re
@@ -26,8 +26,8 @@ class POST_AUTHORLIST:
         self.session.auth = (login_usr,login_pw)
         
         # URLS
-        self.edit_url  = 'http://tadserv.physics.utah.edu/TA-ICRC-09/index.php?title=Test&action=edit'
-        login_url = 'http://tadserv.physics.utah.edu/TA-ICRC-09/index.php?title=Special:UserLogin&returnto=Test' 
+        self.edit_url  = 'http://tadserv.physics.utah.edu/TA-ICRC-09/index.php?title=TA_author_list_and_acknowledgements&action=edit'
+        login_url = 'http://tadserv.physics.utah.edu/TA-ICRC-09/index.php?title=Special:UserLogin&returnto=TA+author+list+and+acknowledgements' 
 
         # Log-in to tadserv
         response = self.session.get(login_url)
