@@ -20,17 +20,30 @@ This means that all editing on the tadserv will be tied to your user account on 
 
 Below is the ```--help``` output of the script:
 ```
-usage: gen_all.py [-h] [-authdate YYYYMMDD] [-ackdate YYYYMMDD] [-post]
+usage: gen_all.py [-h] -authdate YYYYMMDD -ackdate YYYYMMDD [-post]
+                  [-authpath path/to/authfile.csv] [-ackpath path/to/ackfile.txt]
 
-This is a wrapper for Bill Hanlon's TA author list program that will generate all the files need to updated the tadserv author page. (http://tadserv.physics.utah.edu/TA-
-ICRC-09/index.php/TA_author_list_and_acknowledgements) The files are generated within a dated directory in the same directory as this program, except for the .png file. As of right now you need to save
-it manually. This program can then post those generated files to the tadserv author page using the python requests library and Beautiful Soup HTML parser.
+This is a wrapper for Bill Hanlon's TA author list program that will generate all the files need to
+updated the tadserv author page. (http://tadserv.physics.utah.edu/TA-
+ICRC-09/index.php/TA_author_list_and_acknowledgements) The files are generated within a dated
+directory in the same directory as this program, except for the .png file. As of right now you need
+to save it manually. This program can then post those generated files to the tadserv author page
+using the python requests library and Beautiful Soup HTML parser.
 
 optional arguments:
-  -h, --help          show this help message and exit
-  -authdate YYYYMMDD  Enter the date of the most recent author list in the following format: YYYYMMDD. (Typically this is the current date)
-  -ackdate YYYYMMDD   Enter the date of the most recent acknowledgement list in the following format: YYYYMMDD.
-  -post               POST files to the tadserv wiki.
+  -h, --help            show this help message and exit
+  -authdate YYYYMMDD    Enter the date of the most recent author list in the following format:
+                        YYYYMMDD. (Typically this is the current date)
+  -ackdate YYYYMMDD     Enter the date of the most recent acknowledgement list in the following
+                        format: YYYYMMDD.
+  -post                 POST files to the tadserv wiki.
+  -authpath path/to/authfile.csv
+                        Specify a path to the Authorlist.csv file and moves it to the database for
+                        processing. (default: uses csv file $PWD/{authdate}/src/ta_authorlist.csv)
+  -ackpath path/to/ackfile.txt
+                        Specify a path to the Acknowledgements.txt file and moves it to the
+                        database for processing. (default: uses text file
+                        $PWD/{authdate}/src/ta_acknowledgements.txt)
 ```
 
 ### ta_author_list.py
