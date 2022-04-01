@@ -19,6 +19,9 @@ from config import TADSERV_ID_FILE
 ## FUNCTIONS
     
 def parse_stats(stats):
+    # Print out just stats to user
+    print(stats.split('\end{document}\n\n')[-1])
+    
     # Parse the information from stats
     nums = re.findall(r"#.*\s\d+",stats) # ['# of institutions:  32', '# of authors:  138', '# of countries:  7']
     numofauth   = nums[1].split(' ')[-1]
