@@ -19,3 +19,6 @@ SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly', 'https://ww
 CLIENT_SECRET_FILE = os.path.join(ROOT_DIR, 'client_secret_taauth.json')
 # google api application name
 APPLICATION_NAME = 'TA_AUTHOR_LIST'
+
+# General login information for taderv
+TADSERV_ID_FILE = os.path.join(ROOT_DIR, 'tadserv_ids.txt')
